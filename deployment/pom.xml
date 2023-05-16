@@ -31,6 +31,14 @@
       <artifactId>quarkus-arc-deployment</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-reactive-messaging-deployment</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-mutiny-reactive-streams-operators-deployment</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.quarkiverse.quarkus-smallrye-reactive-messaging-pubsub</groupId>
       <artifactId>quarkus-smallrye-reactive-messaging-pubsub</artifactId>
       <version>${project.version}</version>

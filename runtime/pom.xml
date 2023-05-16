@@ -34,14 +34,13 @@
       <artifactId>google-cloud-pubsub</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.smallrye.reactive</groupId>
-      <artifactId>smallrye-reactive-messaging-provider</artifactId>
-      <version>${smallrye.version}</version>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-reactive-messaging</artifactId>
     </dependency>
     <dependency>
       <groupId>io.smallrye.reactive</groupId>
-      <artifactId>mutiny-reactive-streams-operators</artifactId>
-      <version>${smallrye.streams.version}</version>
+      <artifactId>smallrye-reactive-messaging-provider</artifactId>
+      <version>${smallrye.version}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.microprofile.config</groupId>
