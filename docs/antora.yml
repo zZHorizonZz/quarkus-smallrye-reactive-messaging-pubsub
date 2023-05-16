@@ -1,0 +1,5 @@
+name: quarkus-smallrye-reactive-messaging-pubsub
+title: Quarkus Smallrye Reactive Messaging Pubsub
+version: dev
+nav:
+  - modules/ROOT/nav.adoc
