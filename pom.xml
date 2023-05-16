@@ -15,7 +15,6 @@
   <modules>
     <module>deployment</module>
     <module>runtime</module>
-    <module>docs</module>
   </modules>
   <properties>
     <compiler-plugin.version>3.10.1</compiler-plugin.version>
@@ -23,6 +22,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.version>3.0.3.Final</quarkus.version>
+    <smallrye.version>4.5.0</smallrye.version>
+    <smallrye.streams.version>2.1.0</smallrye.streams.version>
+    <jboss-log-manager.version>2.1.19.Final</jboss-log-manager.version>
   </properties>
   <dependencyManagement>
     <dependencies>
