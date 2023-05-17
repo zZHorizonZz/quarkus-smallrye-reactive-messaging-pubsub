@@ -1,7 +1,5 @@
 package io.quarkiverse.google.cloud.pubsub;
 
-import static io.quarkiverse.google.cloud.pubsub.i18n.PubSubLogging.log;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.concurrent.*;
@@ -16,15 +14,16 @@ import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.spi.Connector;
 import org.eclipse.microprofile.reactive.messaging.spi.ConnectorFactory;
+import org.jboss.logging.Logger;
 
 import com.google.api.gax.rpc.AlreadyExistsException;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.cloud.pubsub.v1.TopicAdminClient;
 import com.google.protobuf.ByteString;
-import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.PushConfig;
+import com.google.pubsub.v1.SubscriptionName;
 import com.google.pubsub.v1.TopicName;
 
 import io.smallrye.mutiny.Multi;
@@ -38,6 +37,7 @@ import io.smallrye.reactive.messaging.providers.helpers.MultiUtils;
 public class PubSubConnector implements InboundConnector, OutboundConnector {
 
     static final String CONNECTOR_NAME = "smallrye-gcp-pubsub";
+    private static final Logger LOGGER = Logger.getLogger(PubSubConnector.class);
 
     @Inject
     PubSubConfiguration configuration;
@@ -69,7 +69,7 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
 
         return Multi.createFrom().uni(Uni.createFrom().completionStage(CompletableFuture.supplyAsync(() -> {
             if (isUseAdminClient(config)) {
-                log.adminClientEnabled();
+                LOGGER.info("Admin client is enabled. The GCP Connector is trying to create topics / subscriptions");
                 createTopic(pubSubConfig);
                 createSubscription(pubSubConfig);
             }
@@ -87,7 +87,7 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
         return MultiUtils.via(m -> m.onItem()
                 .transformToUniAndConcatenate(message -> Uni.createFrom().completionStage(CompletableFuture.supplyAsync(() -> {
                     if (isUseAdminClient(config)) {
-                        log.adminClientEnabled();
+                        LOGGER.info("Admin client is enabled. The GCP Connector is trying to create topics / subscriptions");
                         createTopic(pubSubConfig);
                     }
                     return await(pubSubManager.publisher(pubSubConfig).publish(buildMessage(message)));
@@ -106,34 +106,37 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
     private void createTopic(final PubSubConfig config) {
         final TopicAdminClient topicAdminClient = pubSubManager.topicAdminClient(config);
 
+        LOGGER.infof("Creating topic %s", config.getTopic());
+
         final TopicName topicName = TopicName.of(config.getProjectId(), config.getTopic());
+
+        LOGGER.infof("Checking if topic %s exists", topicName);
 
         try {
             topicAdminClient.getTopic(topicName);
         } catch (final NotFoundException nf) {
             try {
-                topicAdminClient.createTopic(topicName);
+                var topic = topicAdminClient.createTopic(topicName);
+                LOGGER.infof("Topic %s created", topic.getName());
             } catch (final AlreadyExistsException ae) {
-                log.topicExistAlready(topicName, ae);
+                LOGGER.tracef("Topic %s already exists", topicName);
             }
         }
     }
 
     private void createSubscription(final PubSubConfig config) {
-        final SubscriptionAdminClient subscriptionAdminClient = pubSubManager.subscriptionAdminClient(config);
+        try (SubscriptionAdminClient subscriptionAdminClient = pubSubManager.subscriptionAdminClient(config)) {
+            final SubscriptionName subscriptionName = SubscriptionName.of(config.getProjectId(), config.getSubscription());
 
-        final ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(config.getProjectId(),
-                config.getSubscription());
+            try {
+                subscriptionAdminClient.getSubscription(subscriptionName);
+            } catch (final NotFoundException e) {
+                final PushConfig pushConfig = PushConfig.newBuilder().build();
+                final TopicName topicName = TopicName.of(config.getProjectId(), config.getTopic());
 
-        try {
-            subscriptionAdminClient.getSubscription(subscriptionName);
-        } catch (final NotFoundException e) {
-            final PushConfig pushConfig = PushConfig.newBuilder()
-                    .build();
-
-            final TopicName topicName = TopicName.of(config.getProjectId(), config.getTopic());
-
-            subscriptionAdminClient.createSubscription(subscriptionName, topicName, pushConfig, 0);
+                subscriptionAdminClient.createSubscription(subscriptionName, topicName, pushConfig, 0);
+                LOGGER.debugf("Subscription %s created", subscriptionName);
+            }
         }
     }
 

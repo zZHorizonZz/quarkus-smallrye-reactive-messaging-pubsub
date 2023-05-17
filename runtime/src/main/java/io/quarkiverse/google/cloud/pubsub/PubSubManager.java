@@ -1,7 +1,5 @@
 package io.quarkiverse.google.cloud.pubsub;
 
-import static io.quarkiverse.google.cloud.pubsub.i18n.PubSubExceptions.ex;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -16,6 +14,7 @@ import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import org.eclipse.microprofile.reactive.messaging.Message;
+import org.jboss.logging.Logger;
 
 import com.google.api.gax.core.BackgroundResource;
 import com.google.api.gax.core.CredentialsProvider;
@@ -24,13 +23,10 @@ import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.GrpcTransportChannel;
 import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.api.gax.rpc.TransportChannelProvider;
+import com.google.auth.Credentials;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.cloud.pubsub.v1.Publisher;
-import com.google.cloud.pubsub.v1.Subscriber;
-import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
-import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
-import com.google.cloud.pubsub.v1.TopicAdminClient;
-import com.google.cloud.pubsub.v1.TopicAdminSettings;
+import com.google.cloud.pubsub.v1.*;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 
@@ -40,6 +36,9 @@ import io.smallrye.mutiny.subscription.MultiEmitter;
 
 @ApplicationScoped
 public class PubSubManager {
+
+    private static final Logger LOGGER = Logger.getLogger(PubSubManager.class);
+    private static final String CLOUD_OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
     private final Map<PubSubConfig, Publisher> publishers = new ConcurrentHashMap<>();
     private final Map<PubSubConfig, TopicAdminClient> topicAdminClients = new ConcurrentHashMap<>();
@@ -110,26 +109,28 @@ public class PubSubManager {
     private SubscriptionAdminClient buildSubscriptionAdminClient(final PubSubConfig config) {
         final SubscriptionAdminSettings.Builder subscriptionAdminSettingsBuilder = SubscriptionAdminSettings.newBuilder();
 
-        buildCredentialsProvider(config).ifPresent(subscriptionAdminSettingsBuilder::setCredentialsProvider);
+        subscriptionAdminSettingsBuilder.setCredentialsProvider(buildCredentialsProvider(config));
         buildTransportChannelProvider(config).ifPresent(subscriptionAdminSettingsBuilder::setTransportChannelProvider);
 
         try {
             return SubscriptionAdminClient.create(subscriptionAdminSettingsBuilder.build());
         } catch (final IOException e) {
-            throw ex.illegalStateUnableToBuildSubscriptionAdminClient(e);
+            LOGGER.error("Unable to build SubscriptionAdminClient", e);
+            return null;
         }
     }
 
     private TopicAdminClient buildTopicAdminClient(final PubSubConfig config) {
         final TopicAdminSettings.Builder topicAdminSettingsBuilder = TopicAdminSettings.newBuilder();
 
-        buildCredentialsProvider(config).ifPresent(topicAdminSettingsBuilder::setCredentialsProvider);
+        topicAdminSettingsBuilder.setCredentialsProvider(buildCredentialsProvider(config));
         buildTransportChannelProvider(config).ifPresent(topicAdminSettingsBuilder::setTransportChannelProvider);
 
         try {
             return TopicAdminClient.create(topicAdminSettingsBuilder.build());
         } catch (final IOException e) {
-            throw ex.illegalStateUnableToBuildTopicAdminClient(e);
+            LOGGER.error("Unable to build TopicAdminClient", e);
+            return null;
         }
     }
 
@@ -139,12 +140,13 @@ public class PubSubManager {
         try {
             final Publisher.Builder publisherBuilder = Publisher.newBuilder(topicName);
 
-            buildCredentialsProvider(config).ifPresent(publisherBuilder::setCredentialsProvider);
+            publisherBuilder.setCredentialsProvider(buildCredentialsProvider(config));
             buildTransportChannelProvider(config).ifPresent(publisherBuilder::setChannelProvider);
 
             return publisherBuilder.build();
         } catch (final IOException e) {
-            throw ex.illegalStateUnableToBuildPublisher(e);
+            LOGGER.error("Unable to build Publisher", e);
+            return null;
         }
     }
 
@@ -154,7 +156,7 @@ public class PubSubManager {
 
         final Subscriber.Builder subscriberBuilder = Subscriber.newBuilder(subscriptionName, messageReceiver);
 
-        buildCredentialsProvider(config).ifPresent(subscriberBuilder::setCredentialsProvider);
+        subscriberBuilder.setCredentialsProvider(buildCredentialsProvider(config));
         buildTransportChannelProvider(config).ifPresent(subscriberBuilder::setChannelProvider);
 
         return subscriberBuilder.build();
@@ -168,21 +170,32 @@ public class PubSubManager {
         return Optional.empty();
     }
 
-    private static Optional<CredentialsProvider> buildCredentialsProvider(final PubSubConfig config) {
+    private static CredentialsProvider buildCredentialsProvider(final PubSubConfig config) {
         if (config.isMockPubSubTopics()) {
-            return Optional.of(NoCredentialsProvider.create());
+            LOGGER.info("Mocking of PubSub topics is enabled. No credentials will be used.");
+            return NoCredentialsProvider.create();
         }
+
+        Credentials credentials;
 
         if (config.getCredentialPath() != null) {
             try {
-                return Optional.of(FixedCredentialsProvider
-                        .create(ServiceAccountCredentials.fromStream(Files.newInputStream(config.getCredentialPath()))));
+                credentials = ServiceAccountCredentials.fromStream(Files.newInputStream(config.getCredentialPath()));
+                LOGGER.info("Credentials path was configured, using credentials from file");
             } catch (final IOException e) {
+                throw new IllegalStateException(e);
+            }
+        } else {
+            try {
+                credentials = GoogleCredentials.getApplicationDefault().createScoped(CLOUD_OAUTH_SCOPE);
+                LOGGER.info("Credentials path was not configured, using default credentials");
+                LOGGER.infof("Credentials: %s", credentials.getClass().getName());
+            } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
         }
 
-        return Optional.empty();
+        return FixedCredentialsProvider.create(credentials);
     }
 
     private ManagedChannel buildChannel(final PubSubConfig config) {

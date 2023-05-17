@@ -1,7 +1,5 @@
 package io.quarkiverse.google.cloud.pubsub;
 
-import static io.quarkiverse.google.cloud.pubsub.i18n.PubSubMessages.msg;
-
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -20,8 +18,8 @@ public class PubSubConfig {
 
     public PubSubConfig(final String projectId, final String topic, final Path credentialPath, final boolean mockPubSubTopics,
             final String host, final Integer port) {
-        this.projectId = Objects.requireNonNull(projectId, msg.mustNotBeNull("projectId"));
-        this.topic = Objects.requireNonNull(topic, msg.mustNotBeNull("topic"));
+        this.projectId = Objects.requireNonNull(projectId);
+        this.topic = Objects.requireNonNull(topic);
         this.credentialPath = credentialPath;
         this.subscription = null;
         this.mockPubSubTopics = mockPubSubTopics;
@@ -31,8 +29,8 @@ public class PubSubConfig {
 
     public PubSubConfig(final String projectId, final String topic, final Path credentialPath, final String subscription,
             final boolean mockPubSubTopics, final String host, final Integer port) {
-        this.projectId = Objects.requireNonNull(projectId, msg.mustNotBeNull("projectId"));
-        this.topic = Objects.requireNonNull(topic, msg.mustNotBeNull("topic"));
+        this.projectId = Objects.requireNonNull(projectId);
+        this.topic = Objects.requireNonNull(topic);
         this.credentialPath = credentialPath;
         this.subscription = subscription;
         this.mockPubSubTopics = mockPubSubTopics;
