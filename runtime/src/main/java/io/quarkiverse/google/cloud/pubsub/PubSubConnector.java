@@ -110,11 +110,15 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
 
         final TopicName topicName = TopicName.of(config.getProjectId(), config.getTopic());
 
+        topicAdminClient.createTopic(topicName);
         LOGGER.infof("Checking if topic %s exists", topicName);
 
         try {
-            topicAdminClient.getTopic(topicName);
+            LOGGER.infof("Topic %s exists", topicName);
+            var topic = topicAdminClient.getTopic(topicName);
+            LOGGER.infof("Topic %s retrieved", topic.getName());
         } catch (final NotFoundException nf) {
+            LOGGER.infof("Topic %s does not exist", topicName);
             try {
                 var topic = topicAdminClient.createTopic(topicName);
                 LOGGER.infof("Topic %s created", topic.getName());
