@@ -1,6 +1,7 @@
 package io.quarkiverse.google.cloud.pubsub.deployment;
 
 import io.quarkiverse.google.cloud.pubsub.PubSubConnector;
+import io.quarkiverse.google.cloud.pubsub.PubSubCredentialsProducer;
 import io.quarkiverse.google.cloud.pubsub.PubSubManager;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -22,6 +23,7 @@ public class PubSubBuildSteps {
 
         builder.addBeanClass(PubSubConnector.class);
         builder.addBeanClass(PubSubManager.class);
+        builder.addBeanClass(PubSubCredentialsProducer.class);
 
         additionalBeans.produce(builder.build());
     }

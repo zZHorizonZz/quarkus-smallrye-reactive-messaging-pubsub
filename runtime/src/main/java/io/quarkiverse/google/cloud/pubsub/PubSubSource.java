@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import org.eclipse.microprofile.reactive.messaging.Message;
 
+import io.quarkiverse.google.cloud.pubsub.config.PubSubConfig;
 import io.smallrye.mutiny.subscription.MultiEmitter;
 
 public class PubSubSource implements Consumer<MultiEmitter<? super Message<?>>> {

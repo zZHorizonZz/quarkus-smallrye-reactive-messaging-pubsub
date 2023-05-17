@@ -26,6 +26,9 @@ import com.google.pubsub.v1.PushConfig;
 import com.google.pubsub.v1.SubscriptionName;
 import com.google.pubsub.v1.TopicName;
 
+import io.quarkiverse.google.cloud.pubsub.config.PubSubConfig;
+import io.quarkiverse.google.cloud.pubsub.config.PubSubConfiguration;
+import io.quarkiverse.google.cloud.pubsub.message.PubSubMessage;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.reactive.messaging.connector.InboundConnector;

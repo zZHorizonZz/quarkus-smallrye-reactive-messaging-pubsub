@@ -1,4 +1,4 @@
-package io.quarkiverse.google.cloud.pubsub;
+package io.quarkiverse.google.cloud.pubsub.message;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
