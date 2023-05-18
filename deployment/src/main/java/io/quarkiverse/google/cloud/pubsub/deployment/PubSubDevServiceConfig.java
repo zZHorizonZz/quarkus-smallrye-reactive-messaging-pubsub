@@ -15,8 +15,6 @@ import io.quarkus.runtime.annotations.ConfigItem;
  * quarkus.pub-sub-dev-service.image-name = gcr.io/google.com/cloudsdktool/google-cloud-cli:380.0.0-emulators
  * quarkus.pub-sub-dev-service.emulatorPort = 8085
  * </pre>
- * <p>
- * Once configured, these settings can be used within your application code.
  */
 @ConfigGroup
 public class PubSubDevServiceConfig {
