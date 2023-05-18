@@ -34,6 +34,10 @@ import io.smallrye.reactive.messaging.connector.InboundConnector;
 import io.smallrye.reactive.messaging.connector.OutboundConnector;
 import io.smallrye.reactive.messaging.providers.helpers.MultiUtils;
 
+/**
+ * This class handles inbound and outbound connections for the Google Cloud PubSub service.
+ * It creates topics and subscriptions, and sets up the publisher and subscriber instances.
+ */
 @ApplicationScoped
 @Connector(PubSubConnector.CONNECTOR_NAME)
 public class PubSubConnector implements InboundConnector, OutboundConnector {
@@ -63,12 +67,16 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
         }
     }
 
+    /**
+     * This method creates a publisher instance for a specified configuration.
+     * It first checks if the admin client is used, if so it creates topics and subscriptions.
+     *
+     * @param config The configuration for the Pub/Sub service
+     * @return A {@link Flow.Publisher} instance
+     */
     @Override
     public Flow.Publisher<? extends Message<?>> getPublisher(final Config config) {
-        final PubSubConfig pubSubConfig = new PubSubConfig(getProjectId(config), getTopic(config),
-                configuration.credentialPath.map(File::new).map(File::toPath).orElse(null),
-                getSubscription(config), configuration.mockPubSubTopics, configuration.host,
-                configuration.port);
+        final PubSubConfig pubSubConfig = buildPubSubConfig(config);
 
         return Multi.createFrom().uni(Uni.createFrom().completionStage(CompletableFuture.supplyAsync(() -> {
             if (isUseAdminClient(config)) {
@@ -81,11 +89,16 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
                 .transformToMultiAndConcatenate(cfg -> Multi.createFrom().emitter(new PubSubSource(cfg, pubSubManager)));
     }
 
+    /**
+     * This method creates a subscriber instance for a specified configuration.
+     * It first checks if the admin client is used, if so it creates topics.
+     *
+     * @param config The configuration for the Pub/Sub service
+     * @return A {@link Flow.Subscriber} instance
+     */
     @Override
     public Flow.Subscriber<? extends Message<?>> getSubscriber(final Config config) {
-        final PubSubConfig pubSubConfig = new PubSubConfig(getProjectId(config), getTopic(config),
-                configuration.credentialPath.map(File::new).map(File::toPath).orElse(null),
-                configuration.mockPubSubTopics, configuration.host, configuration.port);
+        final PubSubConfig pubSubConfig = buildPubSubConfig(config);
 
         return MultiUtils.via(m -> m.onItem()
                 .transformToUniAndConcatenate(message -> Uni.createFrom().completionStage(CompletableFuture.supplyAsync(() -> {
@@ -97,15 +110,35 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
                 }, executorService))));
     }
 
-    private String getProjectId(Config config) {
-        return config.getOptionalValue("project-id", String.class)
-                .orElse(configuration.projectId);
+    /**
+     * Helper method to build {@link PubSubConfig} from given Config
+     *
+     * @param config Input configuration
+     * @return Built {@link PubSubConfig}
+     */
+    private PubSubConfig buildPubSubConfig(final Config config) {
+        return new PubSubConfig(configuration.projectId, getTopic(config),
+                configuration.credentialPath.map(File::new).map(File::toPath).orElse(null),
+                getSubscription(config), configuration.useEmulator, configuration.emulatorHost,
+                configuration.emulatorPort);
     }
 
+    /**
+     * Helper method to check if admin client should be used or not
+     *
+     * @param config Input configuration
+     * @return boolean indicating if admin client should be used
+     */
     boolean isUseAdminClient(Config config) {
         return config.getOptionalValue("use-admin-client", Boolean.class).orElse(true);
     }
 
+    /**
+     * Helper method to create Topic with given PubSubConfig
+     * If Topic already exists, it handles the AlreadyExistsException
+     *
+     * @param config PubSubConfig
+     */
     private void createTopic(final PubSubConfig config) {
         final TopicAdminClient topicAdminClient = pubSubManager.topicAdminClient(config);
         final TopicName topicName = TopicName.of(config.getProjectId(), config.getTopic());
@@ -122,6 +155,12 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
         }
     }
 
+    /**
+     * Helper method to create Subscription with given {@link PubSubConfig}
+     * If Subscription already exists, it handles the NotFoundException
+     *
+     * @param config {@link PubSubConfig}
+     */
     private void createSubscription(final PubSubConfig config) {
         try (SubscriptionAdminClient subscriptionAdminClient = pubSubManager.subscriptionAdminClient(config)) {
             final SubscriptionName subscriptionName = SubscriptionName.of(config.getProjectId(), config.getSubscription());
@@ -138,6 +177,13 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
         }
     }
 
+    /**
+     * Helper method to get Topic from given Config
+     * If not found in config, it gets the one from ConnectorFactory
+     *
+     * @param config Input configuration
+     * @return Topic
+     */
     private static String getTopic(final Config config) {
         final String topic = config.getOptionalValue("topic", String.class)
                 .orElse(null);
@@ -148,10 +194,24 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
         return config.getValue(ConnectorFactory.CHANNEL_NAME_ATTRIBUTE, String.class);
     }
 
+    /**
+     * Helper method to get Subscription from given Config
+     *
+     * @param config Input configuration
+     * @return Subscription
+     */
     private static String getSubscription(final Config config) {
-        return config.getValue("subscription", String.class);
+        return config.getOptionalValue("subscription", String.class)
+                .orElse(null);
     }
 
+    /**
+     * Helper method to build {@link PubsubMessage} from given Message
+     * It handles various types of payloads within the Message
+     *
+     * @param message Message from which PubsubMessage is to be built
+     * @return {@link PubsubMessage} instance
+     */
     private static PubsubMessage buildMessage(final Message<?> message) {
         if (message instanceof PubSubMessage) {
             return ((PubSubMessage) message).getMessage();
@@ -166,6 +226,13 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
         }
     }
 
+    /**
+     * Helper method to handle {@code Future.get()} method calls
+     * It properly handles {@link InterruptedException} and {@link ExecutionException}
+     *
+     * @param future Future instance
+     * @return result of {@code Future.get()}
+     */
     private static <T> T await(final Future<T> future) {
         try {
             return future.get();

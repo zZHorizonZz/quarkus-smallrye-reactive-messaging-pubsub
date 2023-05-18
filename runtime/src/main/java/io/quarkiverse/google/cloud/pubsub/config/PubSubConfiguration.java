@@ -26,23 +26,23 @@ public class PubSubConfiguration {
     public Optional<String> credentialPath;
 
     /**
-     * Flag to enable or disable mocking of Pub/Sub topics.
-     * If set to true, Pub/Sub topics will be mocked.
+     * Flag to enable or disable the use of a local Pub/Sub emulator.
+     * If set to true, the local Pub/Sub emulator will be used.
      */
-    @ConfigItem(name = "mock-pubsub-topics", defaultValue = "false")
-    public boolean mockPubSubTopics;
+    @ConfigItem(name = "use-emulator", defaultValue = "false")
+    public boolean useEmulator;
 
     /**
-     * Host for the mocked Pub/Sub service.
-     * This setting is only used when 'mockPubSubTopics' is set to true.
+     * Host for the local Pub/Sub emulator.
+     * This setting is only used when 'useEmulator' is set to true.
      */
-    @ConfigItem(name = "mock-pubsub-host", defaultValue = "localhost")
-    public String host;
+    @ConfigItem(name = "emulator-host", defaultValue = "localhost")
+    public String emulatorHost;
 
     /**
-     * Port for the mocked Pub/Sub service.
-     * This setting is only used when 'mockPubSubTopics' is set to true.
+     * Port for the local Pub/Sub emulator.
+     * This setting is only used when 'useEmulator' is set to true.
      */
-    @ConfigItem(name = "mock-pubsub-port", defaultValue = "8085")
-    public Integer port;
+    @ConfigItem(name = "emulator-port", defaultValue = "8085")
+    public Integer emulatorPort;
 }

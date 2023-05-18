@@ -52,17 +52,17 @@ public class PubSubManager {
     CredentialsProvider credentials;
 
     /**
-     * Creates or returns an existing Publisher associated with the given PubSubConfig.
+     * Creates or returns an existing {@link Publisher} associated with the given {@link PubSubConfig}.
      *
      * @param config PubSub configuration.
-     * @return Publisher associated with the configuration.
+     * @return {@link Publisher} associated with the configuration.
      */
     public Publisher publisher(final PubSubConfig config) {
         return publishers.computeIfAbsent(config, this::buildPublisher);
     }
 
     /**
-     * Creates and starts a Subscriber associated with the given PubSubConfig and MultiEmitter.
+     * Creates and starts a Subscriber associated with the given {@link Publisher} and {@link MultiEmitter}.
      *
      * @param config PubSub configuration.
      * @param emitter Emitter associated with the Subscriber.
@@ -81,20 +81,20 @@ public class PubSubManager {
     }
 
     /**
-     * Creates or returns an existing SubscriptionAdminClient associated with the given PubSubConfig.
+     * Creates or returns an existing {@link SubscriptionAdminClient} associated with the given PubSubConfig.
      *
      * @param config PubSub configuration.
-     * @return SubscriptionAdminClient associated with the configuration.
+     * @return {@link SubscriptionAdminClient} associated with the configuration.
      */
     public SubscriptionAdminClient subscriptionAdminClient(final PubSubConfig config) {
         return subscriptionAdminClients.computeIfAbsent(config, this::buildSubscriptionAdminClient);
     }
 
     /**
-     * Creates or returns an existing TopicAdminClient associated with the given PubSubConfig.
+     * Creates or returns an existing {@link TopicAdminClient} associated with the given {@link PubSubConfig}.
      *
      * @param config PubSub configuration.
-     * @return TopicAdminClient associated with the configuration.
+     * @return {@link TopicAdminClient} associated with the configuration.
      */
     public TopicAdminClient topicAdminClient(final PubSubConfig config) {
         return topicAdminClients.computeIfAbsent(config, this::buildTopicAdminClient);
@@ -138,9 +138,9 @@ public class PubSubManager {
     }
 
     /**
-     * Shuts down the given BackgroundResource.
+     * Shuts down the given {@link BackgroundResource}.
      *
-     * @param resource The BackgroundResource to be shut down.
+     * @param resource The {@link BackgroundResource} to be shut down.
      */
     private <T extends BackgroundResource> void shutdownResource(T resource) {
         try {
@@ -152,10 +152,10 @@ public class PubSubManager {
     }
 
     /**
-     * Builds a SubscriptionAdminClient using the provided PubSubConfig.
+     * Builds a {@link SubscriptionAdminClient} using the provided {@link PubSubConfig}.
      *
      * @param config PubSub configuration.
-     * @return SubscriptionAdminClient instance.
+     * @return {@link SubscriptionAdminClient} instance.
      */
     private SubscriptionAdminClient buildSubscriptionAdminClient(final PubSubConfig config) {
         final SubscriptionAdminSettings.Builder subscriptionAdminSettingsBuilder = SubscriptionAdminSettings.newBuilder();
@@ -172,10 +172,10 @@ public class PubSubManager {
     }
 
     /**
-     * Builds a TopicAdminClient using the provided PubSubConfig.
+     * Builds a {@link TopicAdminClient} using the provided {@link PubSubConfig}.
      *
      * @param config PubSub configuration.
-     * @return TopicAdminClient instance.
+     * @return {@link TopicAdminClient} instance.
      */
     private TopicAdminClient buildTopicAdminClient(final PubSubConfig config) {
         final TopicAdminSettings.Builder topicAdminSettingsBuilder = TopicAdminSettings.newBuilder();
@@ -192,7 +192,7 @@ public class PubSubManager {
     }
 
     /**
-     * Builds a Publisher using the provided PubSubConfig.
+     * Builds a Publisher using the provided {@link PubSubConfig}.
      *
      * @param config PubSub configuration.
      * @return Publisher instance.
@@ -214,11 +214,11 @@ public class PubSubManager {
     }
 
     /**
-     * Builds a Subscriber using the provided PubSubConfig and PubSubMessageReceiver.
+     * Builds a {@link Subscriber} using the provided {@link PubSubConfig} and {@link PubSubMessageReceiver}.
      *
      * @param config PubSub configuration.
      * @param messageReceiver Message receiver for handling received messages.
-     * @return Subscriber instance.
+     * @return {@link Subscriber} instance.
      */
     private Subscriber buildSubscriber(final PubSubConfig config, final PubSubMessageReceiver messageReceiver) {
         final ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(config.getProjectId(),
@@ -233,27 +233,26 @@ public class PubSubManager {
     }
 
     /**
-     * Builds a TransportChannelProvider based on the provided PubSubConfig.
+     * Builds a {@link TransportChannelProvider} based on the provided {@link PubSubConfig}.
      *
      * @param config PubSub configuration.
-     * @return An Optional containing the TransportChannelProvider, or an empty Optional if not applicable.
+     * @return An Optional containing the {@link TransportChannelProvider}, or an empty {@link Optional} if not applicable.
      */
     private Optional<TransportChannelProvider> buildTransportChannelProvider(final PubSubConfig config) {
-        LOGGER.infof("Mock PubSub Topics: %s", config.isMockPubSubTopics());
-        if (config.isMockPubSubTopics()) {
+        if (config.isEmulatorEnabled()) {
             return Optional.of(FixedTransportChannelProvider.create(GrpcTransportChannel.create(buildChannel(config))));
         }
         return Optional.empty();
     }
 
     /**
-     * Builds a ManagedChannel using the provided PubSubConfig and adds it to the list of channels.
+     * Builds a ManagedChannel using the provided {@link PubSubConfig} and adds it to the list of channels.
      *
      * @param config PubSub configuration.
-     * @return ManagedChannel instance.
+     * @return {@link ManagedChannel} instance.
      */
     private ManagedChannel buildChannel(final PubSubConfig config) {
-        final ManagedChannel channel = ManagedChannelBuilder.forAddress(config.getHost(), config.getPort())
+        final ManagedChannel channel = ManagedChannelBuilder.forAddress(config.getEmulatorHost(), config.getEmulatorPort())
                 .usePlaintext()
                 .build();
         channels.add(channel);
