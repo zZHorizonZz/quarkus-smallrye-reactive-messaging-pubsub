@@ -10,7 +10,7 @@ import io.quarkus.deployment.builditem.FeatureBuildItem;
 
 public class PubSubBuildSteps {
 
-    private static final String FEATURE = "smallrye-reactive-messaging-pubsub";
+    public static final String FEATURE = "smallrye-reactive-messaging-pubsub";
 
     @BuildStep
     public FeatureBuildItem feature() {

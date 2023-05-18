@@ -67,8 +67,8 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
     @Override
     public Flow.Publisher<? extends Message<?>> getPublisher(final Config config) {
         final PubSubConfig pubSubConfig = new PubSubConfig(getProjectId(config), getTopic(config), getCredentialPath(config),
-                getSubscription(config), configuration.mockPubSubTopics, configuration.host.orElse(null),
-                configuration.port.orElse(null));
+                getSubscription(config), configuration.mockPubSubTopics, configuration.host,
+                configuration.port);
 
         return Multi.createFrom().uni(Uni.createFrom().completionStage(CompletableFuture.supplyAsync(() -> {
             if (isUseAdminClient(config)) {
@@ -84,8 +84,7 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
     @Override
     public Flow.Subscriber<? extends Message<?>> getSubscriber(final Config config) {
         final PubSubConfig pubSubConfig = new PubSubConfig(getProjectId(config), getTopic(config), getCredentialPath(config),
-                configuration.mockPubSubTopics, configuration.host.orElse(null),
-                configuration.port.orElse(null));
+                configuration.mockPubSubTopics, configuration.host, configuration.port);
 
         return MultiUtils.via(m -> m.onItem()
                 .transformToUniAndConcatenate(message -> Uni.createFrom().completionStage(CompletableFuture.supplyAsync(() -> {
