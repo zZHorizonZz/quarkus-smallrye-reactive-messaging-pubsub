@@ -12,30 +12,30 @@ public class PubSubConfig {
 
     private final String subscription;
 
-    private final boolean mockPubSubTopics;
-    private final String host;
-    private final Integer port;
+    private final boolean emulatorEnabled;
+    private final String emulatorHost;
+    private final Integer emulatorPort;
 
-    public PubSubConfig(final String projectId, final String topic, final Path credentialPath, final boolean mockPubSubTopics,
-            final String host, final Integer port) {
+    public PubSubConfig(final String projectId, final String topic, final Path credentialPath, final boolean emulatorEnabled,
+            final String emulatorHost, final Integer emulatorPort) {
         this.projectId = Objects.requireNonNull(projectId);
         this.topic = Objects.requireNonNull(topic);
         this.credentialPath = credentialPath;
         this.subscription = null;
-        this.mockPubSubTopics = mockPubSubTopics;
-        this.host = host;
-        this.port = port;
+        this.emulatorEnabled = emulatorEnabled;
+        this.emulatorHost = emulatorHost;
+        this.emulatorPort = emulatorPort;
     }
 
     public PubSubConfig(final String projectId, final String topic, final Path credentialPath, final String subscription,
-            final boolean mockPubSubTopics, final String host, final Integer port) {
+            final boolean emulatorEnabled, final String emulatorHost, final Integer emulatorPort) {
         this.projectId = Objects.requireNonNull(projectId);
         this.topic = Objects.requireNonNull(topic);
         this.credentialPath = credentialPath;
         this.subscription = subscription;
-        this.mockPubSubTopics = mockPubSubTopics;
-        this.host = host;
-        this.port = port;
+        this.emulatorEnabled = emulatorEnabled;
+        this.emulatorHost = emulatorHost;
+        this.emulatorPort = emulatorPort;
     }
 
     public String getProjectId() {
@@ -54,16 +54,16 @@ public class PubSubConfig {
         return subscription;
     }
 
-    public boolean isMockPubSubTopics() {
-        return mockPubSubTopics;
+    public boolean isEmulatorEnabled() {
+        return emulatorEnabled;
     }
 
-    public String getHost() {
-        return host;
+    public String getEmulatorHost() {
+        return emulatorHost;
     }
 
-    public Integer getPort() {
-        return port;
+    public Integer getEmulatorPort() {
+        return emulatorPort;
     }
 
     @Override
@@ -79,14 +79,14 @@ public class PubSubConfig {
                 Objects.equals(topic, that.topic) &&
                 Objects.equals(credentialPath, that.credentialPath) &&
                 Objects.equals(subscription, that.subscription) &&
-                mockPubSubTopics == that.mockPubSubTopics &&
-                Objects.equals(host, that.host) &&
-                Objects.equals(port, that.port);
+                emulatorEnabled == that.emulatorEnabled &&
+                Objects.equals(emulatorHost, that.emulatorHost) &&
+                Objects.equals(emulatorPort, that.emulatorPort);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(projectId, topic, credentialPath, subscription, mockPubSubTopics, host, port);
+        return Objects.hash(projectId, topic, credentialPath, subscription, emulatorEnabled, emulatorHost, emulatorPort);
     }
 
     @Override
@@ -96,9 +96,9 @@ public class PubSubConfig {
                 ", topic=" + topic +
                 ", credentialPath=" + credentialPath +
                 ", subscription=" + subscription +
-                ", mockPubSubTopics=" + mockPubSubTopics +
-                ", host=" + host +
-                ", port=" + port +
+                ", useEmulator=" + emulatorEnabled +
+                ", emulatorHost=" + emulatorHost +
+                ", emulatorPort=" + emulatorPort +
                 ']';
     }
 }

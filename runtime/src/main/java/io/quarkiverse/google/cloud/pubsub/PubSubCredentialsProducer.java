@@ -34,7 +34,7 @@ public class PubSubCredentialsProducer {
     @Singleton
     @DefaultBean
     public CredentialsProvider credentials() {
-        if (config.mockPubSubTopics) {
+        if (config.useEmulator) {
             LOGGER.info("Mocking of PubSub topics is enabled. No credentials will be used.");
             return NoCredentialsProvider.create();
         }

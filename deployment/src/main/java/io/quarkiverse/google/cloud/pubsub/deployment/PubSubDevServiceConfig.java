@@ -1,35 +1,45 @@
 package io.quarkiverse.google.cloud.pubsub.deployment;
 
-import java.util.Optional;
-import java.util.OptionalInt;
-
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigItem;
 
+/**
+ * Configuration group for the PubSubDevService. This class holds all the configuration properties
+ * related to the Google Cloud Pub/Sub service for development environments.
+ * <p>
+ * Here is an example of how to configure these properties:
+ * <p>
+ *
+ * <pre>
+ * quarkus.pub-sub-dev-service.enabled = true
+ * quarkus.pub-sub-dev-service.image-name = gcr.io/google.com/cloudsdktool/google-cloud-cli:380.0.0-emulators
+ * quarkus.pub-sub-dev-service.emulatorPort = 8085
+ * </pre>
+ * <p>
+ * Once configured, these settings can be used within your application code.
+ */
 @ConfigGroup
 public class PubSubDevServiceConfig {
 
     /**
-     * If DevServices has been explicitly enabled or disabled. DevServices is generally enabled
-     * by default, unless there is an existing configuration present.
-     * <p>
-     * When DevServices is enabled Quarkus will attempt to automatically configure and start
-     * a database when running in Dev or Test mode and when Docker is running.
+     * Indicates whether the Pub/Sub service should be enabled or not.
+     * The default value is 'true'.
      */
     @ConfigItem(defaultValue = "true")
     public boolean enabled;
 
     /**
-     * The container image name to use, for container based DevServices providers.
+     * Sets the Docker image name for the Google Cloud SDK.
+     * This image is used to emulate the Pub/Sub service in the development environment.
+     * The default value is 'gcr.io/google.com/cloudsdktool/google-cloud-cli:380.0.0-emulators'.
      */
-    @ConfigItem
-    public Optional<String> imageName;
+    @ConfigItem(name = "image-name", defaultValue = "gcr.io/google.com/cloudsdktool/google-cloud-cli:380.0.0-emulators")
+    public String imageName;
 
     /**
-     * Optional fixed port the dev service will listen to.
-     * <p>
-     * If not defined, the port will be chosen randomly.
+     * Specifies the emulatorPort on which the Pub/Sub service should run in the development environment.
+     * The default value is '8085'.
      */
-    @ConfigItem
-    public OptionalInt port;
+    @ConfigItem(name = "emulatorPort", defaultValue = "8085")
+    public int port;
 }
