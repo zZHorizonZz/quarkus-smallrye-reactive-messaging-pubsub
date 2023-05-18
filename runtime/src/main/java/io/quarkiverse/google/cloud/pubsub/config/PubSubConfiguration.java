@@ -29,20 +29,20 @@ public class PubSubConfiguration {
      * Flag to enable or disable mocking of Pub/Sub topics.
      * If set to true, Pub/Sub topics will be mocked.
      */
-    @ConfigItem(name = "mock-pubsub-topics")
+    @ConfigItem(name = "mock-pubsub-topics", defaultValue = "false")
     public boolean mockPubSubTopics;
 
     /**
      * Host for the mocked Pub/Sub service.
      * This setting is only used when 'mockPubSubTopics' is set to true.
      */
-    @ConfigItem(name = "mock-pubsub-host")
-    public Optional<String> host;
+    @ConfigItem(name = "mock-pubsub-host", defaultValue = "localhost")
+    public String host;
 
     /**
      * Port for the mocked Pub/Sub service.
      * This setting is only used when 'mockPubSubTopics' is set to true.
      */
-    @ConfigItem(name = "mock-pubsub-port")
-    public Optional<Integer> port;
+    @ConfigItem(name = "mock-pubsub-port", defaultValue = "8085")
+    public Integer port;
 }

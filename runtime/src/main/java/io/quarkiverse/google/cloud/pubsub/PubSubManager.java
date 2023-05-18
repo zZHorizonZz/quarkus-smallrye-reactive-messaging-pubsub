@@ -239,6 +239,7 @@ public class PubSubManager {
      * @return An Optional containing the TransportChannelProvider, or an empty Optional if not applicable.
      */
     private Optional<TransportChannelProvider> buildTransportChannelProvider(final PubSubConfig config) {
+        LOGGER.infof("Mock PubSub Topics: %s", config.isMockPubSubTopics());
         if (config.isMockPubSubTopics()) {
             return Optional.of(FixedTransportChannelProvider.create(GrpcTransportChannel.create(buildChannel(config))));
         }

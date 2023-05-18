@@ -14,6 +14,7 @@
   <name>Quarkus Smallrye Reactive Messaging Pubsub - Parent</name>
   <modules>
     <module>deployment</module>
+    <module>grpc</module>
     <module>runtime</module>
   </modules>
   <properties>
