@@ -50,12 +50,8 @@ public class PubSubDevServiceProcessor {
                 loggingSetupBuildItem);
 
         try {
-            devService = startContainer(dockerStatusBuildItem,
-                    pubSubBuildTimeConfig.devservice,
-                    "test",
+            devService = startContainer(dockerStatusBuildItem, pubSubBuildTimeConfig.devservice,
                     globalDevServicesConfig.timeout);
-
-            LOGGER.infof("Dev Services started: %s", "pubsub");
         } catch (Throwable t) {
             compressor.closeAndDumpCaptured();
             throw new RuntimeException(t);
@@ -70,7 +66,6 @@ public class PubSubDevServiceProcessor {
 
     private DevServicesResultBuildItem.RunningDevService startContainer(DockerStatusBuildItem dockerStatusBuildItem,
             PubSubDevServiceConfig config,
-            String connectionName,
             Optional<Duration> timeout) {
 
         if (!config.enabled) {
@@ -84,26 +79,13 @@ public class PubSubDevServiceProcessor {
             return null;
         }
 
-        PubSubEmulatorContainer pubSubEmulatorContainer = pubSubEmulatorContainer = new QuarkusPubSubContainer(
+        PubSubEmulatorContainer pubSubEmulatorContainer = new QuarkusPubSubContainer(
                 DockerImageName.parse("gcr.io/google.com/cloudsdktool/google-cloud-cli:380.0.0-emulators")
                         .asCompatibleSubstituteFor("gcr.io/google.com/cloudsdktool/cloud-sdk"),
                 8085);
+
         timeout.ifPresent(pubSubEmulatorContainer::withStartupTimeout);
         pubSubEmulatorContainer.start();
-        /*
-         * Optional<String> databaseName = ConfigProvider.getConfig().getOptionalValue(configPrefix + "database", String.class);
-         * String effectiveURL =
-         * databaseName.map(mongoDBContainer::getReplicaSetUrl).orElse(mongoDBContainer.getReplicaSetUrl());
-         * if ((capturedProperties.connectionProperties != null) && !capturedProperties.connectionProperties.isEmpty()) {
-         * effectiveURL = effectiveURL + "?"
-         * + URLEncodedUtils.format(
-         * capturedProperties.connectionProperties.entrySet().stream()
-         * .map(e -> new BasicNameValuePair(e.getKey(), e.getValue())).collect(Collectors.toList()),
-         * StandardCharsets.UTF_8);
-         * }
-         */
-
-        LOGGER.infof("Dev Services started PubSub container on address %s", pubSubEmulatorContainer.getEmulatorEndpoint());
 
         return new DevServicesResultBuildItem.RunningDevService(PubSubBuildSteps.FEATURE,
                 pubSubEmulatorContainer.getContainerId(),

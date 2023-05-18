@@ -1,7 +1,6 @@
 package io.quarkiverse.google.cloud.pubsub;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.concurrent.*;
 
 import jakarta.annotation.PostConstruct;
@@ -66,13 +65,14 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
 
     @Override
     public Flow.Publisher<? extends Message<?>> getPublisher(final Config config) {
-        final PubSubConfig pubSubConfig = new PubSubConfig(getProjectId(config), getTopic(config), getCredentialPath(config),
+        final PubSubConfig pubSubConfig = new PubSubConfig(getProjectId(config), getTopic(config),
+                configuration.credentialPath.map(File::new).map(File::toPath).orElse(null),
                 getSubscription(config), configuration.mockPubSubTopics, configuration.host,
                 configuration.port);
 
         return Multi.createFrom().uni(Uni.createFrom().completionStage(CompletableFuture.supplyAsync(() -> {
             if (isUseAdminClient(config)) {
-                LOGGER.info("Admin client is enabled. The GCP Connector is trying to create topics / subscriptions");
+                LOGGER.info("Admin client is enabled. The GCP Connector is trying to create topics / subscriptions.");
                 createTopic(pubSubConfig);
                 createSubscription(pubSubConfig);
             }
@@ -83,13 +83,14 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
 
     @Override
     public Flow.Subscriber<? extends Message<?>> getSubscriber(final Config config) {
-        final PubSubConfig pubSubConfig = new PubSubConfig(getProjectId(config), getTopic(config), getCredentialPath(config),
+        final PubSubConfig pubSubConfig = new PubSubConfig(getProjectId(config), getTopic(config),
+                configuration.credentialPath.map(File::new).map(File::toPath).orElse(null),
                 configuration.mockPubSubTopics, configuration.host, configuration.port);
 
         return MultiUtils.via(m -> m.onItem()
                 .transformToUniAndConcatenate(message -> Uni.createFrom().completionStage(CompletableFuture.supplyAsync(() -> {
                     if (isUseAdminClient(config)) {
-                        LOGGER.info("Admin client is enabled. The GCP Connector is trying to create topics / subscriptions");
+                        LOGGER.info("Admin client is enabled. The GCP Connector is trying to create topics / subscriptions.");
                         createTopic(pubSubConfig);
                     }
                     return await(pubSubManager.publisher(pubSubConfig).publish(buildMessage(message)));
@@ -149,13 +150,6 @@ public class PubSubConnector implements InboundConnector, OutboundConnector {
 
     private static String getSubscription(final Config config) {
         return config.getValue("subscription", String.class);
-    }
-
-    private Path getCredentialPath(final Config config) {
-        return config.getOptionalValue("credential-path", String.class)
-                .map(File::new)
-                .map(File::toPath)
-                .orElse(configuration.credentialPath.map(File::new).map(File::toPath).orElse(null));
     }
 
     private static PubsubMessage buildMessage(final Message<?> message) {
