@@ -27,7 +27,7 @@
     <smallrye.version>4.6.0</smallrye.version>
     <smallrye.streams.version>2.1.0</smallrye.streams.version>
     <jboss-log-manager.version>2.1.19.Final</jboss-log-manager.version>
-    <gcp-libraries-bom.version>26.16.0</gcp-libraries-bom.version>
+    <gcp-libraries-bom.version>26.22.0</gcp-libraries-bom.version>
   </properties>
   <dependencyManagement>
     <dependencies>
